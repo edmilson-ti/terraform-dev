@@ -13,6 +13,12 @@ jobs:
     name: 'Terraform Validation' # Nome do trabalho que aparecerá na tela do GitHub
     runs-on: ubuntu-latest       # O GitHub vai criar uma máquina virtual limpa com Linux Ubuntu para rodar os testes
 
+    # 🔐 ADICIONE ESTE BLOCO ABAIXO PARA ENTREGAR AS CHAVES AO CI
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      AWS_DEFAULT_REGION: 'us-east-1'
+
     # A sequência de passos que a máquina virtual vai executar, um por um
     steps:
     
