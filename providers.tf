@@ -13,13 +13,13 @@ terraform {
   # ATENÇÃO: Deixe este bloco comentado com '#' até que você crie o bucket 
   # fisicamente na AWS usando o comando 'terraform apply'.
   # =========================================================================
-  # backend "s3" {
-  #   bucket         = "nome-do-seu-bucket-de-state-unico" # Nome exato do bucket S3
-  #   key            = "dev/terraform.tfstate"            # Caminho e nome do arquivo de estado dentro do bucket
-  #   region         = "us-east-1"                         # Mesma região do seu provider
-  #   encrypt        = true                                # Ativa criptografia nos arquivos de state
-  #   dynamodb_table = "terraform-state-lock"              # (Opcional) Tabela DynamoDB para evitar travas concorrentes
-  # }
+  backend "s3" {
+    bucket         = "edmilsonlima-cloud-terraform-dev-state" # Nome exato do bucket S3
+    key            = "dev/terraform.tfstate"            # Caminho e nome do arquivo de estado dentro do bucket
+    region         = "us-east-1"                         # Mesma região do seu provider
+    encrypt        = true                                # Ativa criptografia nos arquivos de state
+    #dynamodb_table = "terraform-state-lock"              # (Opcional) Tabela DynamoDB para evitar travas concorrentes
+  }
 }
 
 provider "aws" {
