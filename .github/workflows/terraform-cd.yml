@@ -1,0 +1,51 @@
+# Nome da esteira que vai aparecer no painel do GitHub Actions quando houver um deploy
+name: 'Terraform CD'
+
+# O gatilho (trigger) específico para a Entrega Contínua (Continuous Deployment)
+on:
+  push: # Significa: "Execute esta pipeline apenas quando um código for consolidado/salvo na branch"
+    branches:
+      - main # A esteira só vai rodar quando o Pull Request da 'develop' for aprovado e mesclado na 'main'
+
+# Bloco que define o trabalho de implantação/deploy na AWS
+jobs:
+  terraform-cd:
+    name: 'Terraform Deployment' # Nome visual do processo de deploy no GitHub
+    runs-on: ubuntu-latest       # O GitHub Actions vai ligar uma máquina virtual Linux limpa para rodar o deploy
+
+    # 🔐 VARIÁVEIS DE AMBIENTE (Injeção de Credenciais)
+    # É aqui que a mágica da autenticação acontece. A máquina virtual do GitHub precisa de permissão 
+    # para criar recursos na AWS do seu laboratório do Pluralsight. 
+    # O Terraform lê essas variáveis de ambiente do sistema de forma totalmente automática.
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}          # Puxa a chave de acesso pública salva nos Secrets do repositório
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}  # Puxa a chave secreta de criptografia salva nos Secrets
+      AWS_DEFAULT_REGION: 'us-east-1'                             # Região padrão da AWS onde a infraestrutura será criada
+
+    # Passos sequenciais que a máquina do GitHub vai executar no deploy
+    steps:
+    
+    # PASSO 1: Baixar os arquivos
+    # Clona os arquivos da branch 'main' (que acabou de receber o merge) para dentro do disco da máquina virtual.
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # PASSO 2: Instalar o Terraform
+    # Instala o utilitário de linha de comando do Terraform na máquina do GitHub.
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0 # Garante o uso da mesma versão que você configurou no provider e no CI
+
+    # PASSO 3: Inicializar o Terraform (terraform init)
+    # Lê os seus arquivos '.tf' (como o seu arquivo do bucket S3 e o providers.tf) e baixa os plugins 
+    # oficiais da AWS. Ele usa as credenciais inseridas ali em cima no bloco 'env' para validar o acesso.
+    - name: Terraform Init
+      run: terraform init
+
+    # PASSO 4: Executar a criação da Infraestrutura (terraform apply)
+    # Este é o passo definitivo de CD. Ele compara o código enviado com o que existe na AWS e cria o bucket S3.
+    # O parâmetro '--auto-approve' é OBRIGATÓRIO aqui porque a pipeline roda em segundo plano e 
+    # não tem como um humano digitar "yes" no terminal do GitHub Actions para confirmar.
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
