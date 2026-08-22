@@ -1,0 +1,47 @@
+# Nome amigável que vai aparecer na aba "Actions" do seu repositório no GitHub
+name: 'Terraform CI'
+
+# O gatilho (trigger) que aciona a pipeline automaticamente
+on:
+  pull_request: # Significa: "Rode esta pipeline sempre que um Pull Request for aberto ou atualizado"
+    branches:
+      - main  # A pipeline só vai rodar se o Pull Request tiver como destino final a branch 'main'
+
+# Os blocos de trabalho que a pipeline vai executar
+jobs:
+  terraform-ci:
+    name: 'Terraform Validation' # Nome do trabalho que aparecerá na tela do GitHub
+    runs-on: ubuntu-latest       # O GitHub vai criar uma máquina virtual limpa com Linux Ubuntu para rodar os testes
+
+    # A sequência de passos que a máquina virtual vai executar, um por um
+    steps:
+    
+    # PASSO 1: Clonar o código
+    # Por padrão, a máquina virtual do GitHub começa totalmente vazia. 
+    # Este passo usa uma ação oficial do GitHub para clonar os arquivos da sua branch 'develop' para dentro da máquina.
+    - name: Checkout Code
+      uses: actions/checkout@v4
+
+    # PASSO 2: Instalar o Terraform
+    # Este passo baixa e instala o executável do Terraform na máquina virtual do GitHub.
+    # Você pode alterar o parâmetro 'terraform_version' caso seu projeto use uma versão específica.
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.0
+
+    # PASSO 3: Inicializar o projeto (terraform init)
+    # Roda o comando básico do Terraform para ler seus arquivos e baixar os provedores 
+    # necessários (como o provedor da AWS, Azure, etc.) para dentro da máquina virtual.
+    - name: Terraform Init
+      run: terraform init
+
+    # PASSO 4: Validar a sintaxe do código (terraform validate)
+    # Este é o passo mais importante do CI! Ele verifica se o seu código do Terraform tem:
+    # - Erros de digitação nas variáveis.
+    # - Parênteses ou chaves faltando.
+    # - Argumentos inválidos ou blocos mal estruturados.
+    # Se este comando encontrar qualquer erro, a pipeline falha e bloqueia o merge na 'main'.
+    - name: Terraform Validate
+      run: terraform validate
+
